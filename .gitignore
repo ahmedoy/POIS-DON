@@ -1,0 +1,11 @@
+# 1. Ignore everything
+*
+
+# 2. Allow directories (so Git can look inside them for files)
+!*/
+
+# 3. Specifically allow the files you want
+!.gitignore
+!*.py
+!*.yaml
+!*.md
