@@ -1,5 +1,5 @@
 from torchvision import transforms
-from image_datasets.base_image_dataset import ImageDatasetConfigBase
+from image_datasets.base_image_dataset_config import ImageDatasetConfigBase
 
 class MNISTConfig(ImageDatasetConfigBase):
 

@@ -1,0 +1,18 @@
+dataset_name: mnist
+experiment_id: "exp_1"
+run_id: "1"
+attack_name: clean_basic
+architecture_name: simple_cnn
+use_pretrained_weights: False
+number_of_models_train: 2
+number_of_models_val: 1
+number_of_models_test: 1
+learning_rate: 0.001
+num_epochs: 1
+train_batch_size: 16
+eval_batch_size: 32
+seed: 5
+turn_off_cuda_optimizations: True
+attack_config:
+    debug_parameter_1: 5e-1
+    debug_parameter_2: 5

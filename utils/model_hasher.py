@@ -21,6 +21,6 @@ def hash_model_on_disk(model: torch.nn.Module, chunk_size: int = 65536):
     return hash_gen.hexdigest()
 
 
-def get_model_id(model, num_characters=10):
+def get_model_id(model: torch.nn.Module, num_characters=15):
     full_hash = hash_model_on_disk(model)
     return full_hash[:num_characters]  # Returns first num_characters characters
