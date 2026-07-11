@@ -76,6 +76,7 @@ class DefaultTrainer:
                 DefaultImageTorchDataset, self.dataloaders.train_loader.dataset
             )
 
+            # Obtain poison rate and clean eval transform which are required metadata when saving the model
             clean_eval_transform = test_dataset.transform.clean_image_transform
             poison_rate = train_dataset.transform.poison_rate
 
@@ -101,6 +102,7 @@ class DefaultTrainer:
 
         model = self._run_training_loop(model, optimizer, criterion, desc)
         trained_model_stats = self.get_model_stats(model)
+        print(trained_model_stats)
         return model, trained_model_stats
 
     def _run_training_loop(
@@ -110,7 +112,9 @@ class DefaultTrainer:
         criterion: torch.nn.Module,
         desc: str,
     ) -> torch.nn.Module:
-        best_val_acc = -1.0
+
+        # Will be Validation Accuracy or HarmonicMean(Validation Accuracy, Attack Success Rate) depending on is_trojan
+        best_metric = -1.0
 
         with tempfile.TemporaryDirectory(prefix="trainer_tmp_") as tmp_dir:
             ckpt = Path(tmp_dir) / "best.pt"
@@ -119,10 +123,12 @@ class DefaultTrainer:
                 _ = self._train_epoch(
                     model, self.dataloaders.train_loader, optimizer, criterion
                 )
-                val_acc = self._eval_epoch(model, self.dataloaders.val_loader)
+                metric = self._checkpoint_selection_metric(
+                    model, self.dataloaders.val_loader
+                )
 
-                if val_acc > best_val_acc:
-                    best_val_acc = val_acc
+                if metric > best_metric:
+                    best_metric = metric
                     torch.save(model.state_dict(), ckpt)
 
             model.load_state_dict(
@@ -134,14 +140,16 @@ class DefaultTrainer:
     def _train_epoch(
         self,
         model: torch.nn.Module,
-        loader: DataLoader,
+        train_loader: DataLoader,
         optimizer: torch.optim.Optimizer,
         criterion: torch.nn.Module,
     ) -> float:
         model.train()
+        dataset = cast(DefaultImageTorchDataset, train_loader.dataset)
+        dataset.set_transform_mode(TransformMode.DEFAULT)
         correct = total = 0
 
-        for images, labels in loader:
+        for images, labels in train_loader:
             images, labels = images.to(self.device), labels.to(self.device)
             optimizer.zero_grad()
             outputs = model(images)
@@ -155,44 +163,69 @@ class DefaultTrainer:
         return correct / total if total > 0 else 0.0
 
     @torch.no_grad()
-    def _eval_epoch(self, model: torch.nn.Module, loader: DataLoader) -> float:
-        """Clean accuracy — no batch transform applied."""
+    def _eval_accuracy(
+        self, model: torch.nn.Module, loader: DataLoader, mode: TransformMode
+    ) -> float:
+        """Evaluate accuracy on `loader` under a given transform mode.
+
+        Temporarily switches the loader's dataset into `mode` (e.g. CLEAN to
+        measure clean accuracy, POISON to measure attack success rate) and
+        restores the dataset's original mode afterward, regardless of how
+        this function exits.
+        """
         model.eval()
-        correct = total = 0
+        dataset = cast(DefaultImageTorchDataset, loader.dataset)
+        original_mode = dataset.transform.transform_mode
+        dataset.set_transform_mode(mode)
+        try:
+            correct = total = 0
+            for images, labels in loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                outputs = model(images)
+                correct += (outputs.argmax(dim=1) == labels).sum().item()
+                total += labels.size(0)
+            return correct / total if total > 0 else 0.0
+        finally:
+            dataset.set_transform_mode(original_mode)
 
-        for images, labels in loader:
-            images, labels = images.to(self.device), labels.to(self.device)
-            outputs = model(images)
-            correct += (outputs.argmax(dim=1) == labels).sum().item()
-            total += labels.size(0)
+    def _checkpoint_selection_metric(
+        self, model: torch.nn.Module, val_loader: DataLoader
+    ) -> float:
+        """Metric used to decide whether an epoch's weights become the new checkpoint.
 
-        return correct / total if total > 0 else 0.0
+        For benign models this is just clean validation accuracy. For trojaned
+        models, selecting on clean accuracy alone can pick an epoch where ASR
+        collapses (or vice versa), so we use the harmonic mean of validation
+        clean accuracy and validation ASR — it only scores high when both are
+        high, which keeps a checkpoint from "winning" by sacrificing one for
+        the other.
+        """
+        val_acc = self._eval_accuracy(model, val_loader, TransformMode.CLEAN)
+
+        if not self.is_trojan:
+            return val_acc
+
+        val_asr = self._eval_accuracy(model, val_loader, TransformMode.POISON)
+        return self._harmonic_mean(val_acc, val_asr)
+
+    @staticmethod
+    def _harmonic_mean(a: float, b: float) -> float:
+        if a + b == 0:
+            return 0.0
+        return 2 * a * b / (a + b)
 
     @torch.no_grad()
     def get_model_stats(self, model: torch.nn.Module) -> TrainedModelStats:
         model.eval()
 
-        def eval_accuracy(loader: DataLoader, mode: TransformMode) -> float:
-            dataset = cast(DefaultImageTorchDataset, loader.dataset)
-            original_mode = dataset.transform.transform_mode
-            dataset.set_transform_mode(mode)
-            try:
-                correct = total = 0
-                for images, labels in loader:
-                    images, labels = images.to(self.device), labels.to(self.device)
-                    outputs = model(images)
-                    correct += (outputs.argmax(dim=1) == labels).sum().item()
-                    total += labels.size(0)
-                return correct / total if total > 0 else 0.0
-            finally:
-                dataset.set_transform_mode(original_mode)
-
         def eval_split(loader: DataLoader) -> tuple[float, float]:
-            clean_acc = eval_accuracy(loader, TransformMode.CLEAN)
+            clean_acc = self._eval_accuracy(model, loader, TransformMode.CLEAN)
             # ASR only makes sense for trojaned models (poison transform/label
             # transform are None otherwise, and AttackTransform will raise).
             attack_success_rate = (
-                eval_accuracy(loader, TransformMode.POISON) if self.is_trojan else 0.0
+                self._eval_accuracy(model, loader, TransformMode.POISON)
+                if self.is_trojan
+                else 0.0
             )
             return clean_acc, attack_success_rate
 

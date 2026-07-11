@@ -4,6 +4,7 @@ from PIL import Image
 import warnings
 from typing import List, Tuple
 from attacks.base_transform import AttackTransform, TransformMode
+from typing import Optional
 
 
 class DefaultImageTorchDataset(Dataset):
@@ -27,18 +28,50 @@ class DefaultImageTorchDataset(Dataset):
         else:
             self.channel_mode = "RGB"
 
+        # Lazily computed, cached indices into `self.data` whose label belongs
+        # to a poisoned class. Only meaningful/used in TransformMode.POISON —
+        # not every sample is eligible to be poisoned, so POISON mode iterates
+        # over this subset rather than the full dataset.
+        self._poison_eligible_indices: Optional[List[int]] = None
+
     def set_transform_mode(self, transform_mode: TransformMode):
         self.transform.set_transform_mode(transform_mode)
 
+    def _get_poison_eligible_indices(self) -> List[int]:
+        if self._poison_eligible_indices is None:
+            label_transformer = getattr(self.transform, "label_transformer", None)
+            if not label_transformer:
+                raise ValueError("No poisoned classes found for attack.")
+
+            poisoned_classes = set(label_transformer.lable_mapping.keys())
+            self._poison_eligible_indices = [
+                idx
+                for idx, (_, label) in enumerate(self.data)
+                if label in poisoned_classes
+            ]
+
+            if not self._poison_eligible_indices:
+                raise ValueError("No samples belonging to a poisoned class were found.")
+
+        return self._poison_eligible_indices
+
     def __len__(self):
+        if self.transform.transform_mode == TransformMode.POISON:
+            return len(self._get_poison_eligible_indices())
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def _load_sample(self, idx):
         img_path, label = self.data[idx]
         # Load image
         img = Image.open(img_path).convert(self.channel_mode)
         img, label = self.transform(img, label)
         return img, label
+
+    def __getitem__(self, idx):
+        if self.transform.transform_mode == TransformMode.POISON:
+            source_idx = self._get_poison_eligible_indices()[idx]
+            return self._load_sample(source_idx)
+        return self._load_sample(idx)
 
 
 def get_dataloader(
