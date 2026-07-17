@@ -42,5 +42,7 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    config_path = "/home/agabr/projects/pois-don2/experiment_configs/sig.yaml"
+    config_path = (
+        "/home/agabr/projects/pois-don2/experiment_configs/wanet_no_noise.yaml "
+    )
     main(config_path)

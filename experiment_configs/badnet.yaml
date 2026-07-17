@@ -1,0 +1,22 @@
+dataset_name: mnist
+experiment_id: "exp_1"
+run_id: "1"
+attack_name: badnet
+architecture_name: simple_cnn
+use_pretrained_weights: False
+number_of_models_train: 2
+number_of_models_val: 1
+number_of_models_test: 1
+learning_rate: 0.001
+num_epochs: 1
+train_batch_size: 16
+eval_batch_size: 32
+seed: 5
+turn_off_cuda_optimizations: False
+attack_config:
+    trigger_size: 5
+    corners: ["up_left", "up_right", "down_left", "down_right"]
+    label_mapping:
+      4: 5
+      0: 8
+    poison_rate: 0.5
