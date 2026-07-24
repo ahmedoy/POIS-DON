@@ -1,7 +1,7 @@
-from utils import seeder
-from registries import attack_registry, architecture_registry, image_dataset_registry
-from schema.attack_experiment import AttackExperiment
 from attacks.default_trainer import create_and_save_models
+from registries import architecture_registry, attack_registry, image_dataset_registry
+from schema.attack_experiment import AttackExperiment
+from utils import seeder
 
 
 def main(config_path):
@@ -42,7 +42,5 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    config_path = (
-        "/home/agabr/projects/pois-don2/experiment_configs/wanet_no_noise.yaml "
-    )
+    config_path = "/home/agabr/projects/pois-don2/experiment_configs/attacks/clean.yaml"
     main(config_path)

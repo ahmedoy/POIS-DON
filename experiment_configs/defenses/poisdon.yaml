@@ -1,0 +1,29 @@
+dataset_name: cifar10
+experiment_id: "exp_1"
+
+run_id: 1
+defense_name: poisdon
+
+seed: 42
+turn_off_cuda_optimizations: false
+
+train_model_collections:
+  - run_id: "1"
+    attack_name: clean_basic
+    model_architecture_name: simple_cnn
+
+val_model_collections:
+  - run_id: "1"
+    attack_name: clean_basic
+    model_architecture_name: simple_cnn
+
+test_model_collections:
+  - run_id: "1"
+    attack_name: badnet
+    model_architecture_name: simple_cnn
+
+defense_config:
+  signature_optimization_config: "dataset_specific" # can be "dataset_specific" or "default"
+  detection_percentile: 0.95
+  poisdon_mode: "both" # Can be "max", "min" or "both"
+  use_standardization: True

@@ -1,14 +1,17 @@
 import warnings
+from collections.abc import Callable
+
 import torch
-import torch.nn as nn
+from torch import nn
+
 from architectures.base_model_architecture import ModelArchitectureBase
 from image_datasets.base_image_dataset_config import ImageDatasetConfigBase
-from typing import Callable
+
 
 class SimpleCNN(nn.Module):
     """Runtime-generated CNN class: no-arg constructor creates a fresh model."""
 
-    def __init__(self, H:int, W:int, C:int, n_classes:int):
+    def __init__(self, H: int, W: int, C: int, n_classes: int):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(C, 32, kernel_size=3, padding=1),

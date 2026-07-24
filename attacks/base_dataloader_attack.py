@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from image_datasets.base_image_dataset_config import ImageDatasetConfigBase
-from schema.attack_experiment import AttackExperiment, AttackDataLoaders
+
 from architectures.base_model_architecture import ModelArchitectureBase
+from image_datasets.base_image_dataset_config import ImageDatasetConfigBase
+from schema.attack_experiment import AttackDataLoaders, AttackExperiment
 
 
 class DataloaderBasedAttackBase(ABC):

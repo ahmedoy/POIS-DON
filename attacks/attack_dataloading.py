@@ -1,17 +1,17 @@
-from torch.utils.data import Dataset, DataLoader
-from utils.storage_layout import ImageDatasetPaths
-from PIL import Image
 import warnings
-from typing import List, Tuple
+
+from PIL import Image
+from torch.utils.data import DataLoader, Dataset
+
 from attacks.base_transform import AttackTransform, TransformMode
-from typing import Optional
+from utils.storage_layout import ImageDatasetPaths
 
 
 class DefaultImageTorchDataset(Dataset):
     def __init__(
         self,
         input_channels: int,  # Used to either read in greyscale or rgb
-        data: List[Tuple[str, int]],
+        data: list[tuple[str, int]],
         attack_transform: AttackTransform,
     ):
         """
@@ -32,12 +32,12 @@ class DefaultImageTorchDataset(Dataset):
         # to a poisoned class. Only meaningful/used in TransformMode.POISON —
         # not every sample is eligible to be poisoned, so POISON mode iterates
         # over this subset rather than the full dataset.
-        self._poison_eligible_indices: Optional[List[int]] = None
+        self._poison_eligible_indices: list[int] | None = None
 
     def set_transform_mode(self, transform_mode: TransformMode):
         self.transform.set_transform_mode(transform_mode)
 
-    def _get_poison_eligible_indices(self) -> List[int]:
+    def _get_poison_eligible_indices(self) -> list[int]:
         if self._poison_eligible_indices is None:
             label_transformer = getattr(self.transform, "label_transformer", None)
             if not label_transformer:
@@ -76,7 +76,7 @@ class DefaultImageTorchDataset(Dataset):
 
 def get_dataloader(
     input_channels: int,  # Used to either read in greyscale or rgb
-    data: List[Tuple[str, int]],
+    data: list[tuple[str, int]],
     attack_transform: AttackTransform,
     batch_size: int,
     shuffle: bool,

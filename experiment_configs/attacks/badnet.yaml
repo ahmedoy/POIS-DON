@@ -1,12 +1,12 @@
-dataset_name: mnist
+dataset_name: cifar10
 experiment_id: "exp_1"
 run_id: "1"
 attack_name: badnet
 architecture_name: simple_cnn
 use_pretrained_weights: False
-number_of_models_train: 2
-number_of_models_val: 1
-number_of_models_test: 1
+number_of_models_train: 0
+number_of_models_val: 0
+number_of_models_test: 2
 learning_rate: 0.001
 num_epochs: 1
 train_batch_size: 16

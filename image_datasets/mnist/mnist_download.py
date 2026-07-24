@@ -1,6 +1,5 @@
 from typing import List, Dict
 from pathlib import Path
-import json
 import shutil
 import tempfile
 import random
@@ -97,13 +96,12 @@ def download_split(
     print("Download complete!")
     return {"train_size": train_size, "val_size": val_size, "test_size": test_size}
 
+
 def main():
     mnist_dataset = MNISTConfig()
     splits = ["train", "val", "test"]
 
-    download_split(
-        mnist_dataset=mnist_dataset, splits=splits
-    )
+    download_split(mnist_dataset=mnist_dataset, splits=splits)
 
 
 if __name__ == "__main__":
