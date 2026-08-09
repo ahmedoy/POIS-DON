@@ -9,6 +9,7 @@
 !*.py
 !*.yaml
 !*.md
+!*.ipynb
 
 # 4. Allow PNG files in figures/
 !figures/*.png
