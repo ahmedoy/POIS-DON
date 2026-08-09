@@ -9,3 +9,6 @@
 !*.py
 !*.yaml
 !*.md
+
+# 4. Allow PNG files in figures/
+!figures/*.png
