@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import torch
@@ -8,6 +8,8 @@ from defenses.base_defense import DefenseBase
 from defenses.poisdon.optimization_configs import optimization_configs_registry
 from defenses.poisdon.signature_logit_extractor import SignatureLogitsExtractor
 from registries.image_dataset_registry import IMAGE_DATASET_REGISTRY
+from schema.defense_experiment import AnomalyResult
+from utils import repo_state
 
 
 @dataclass
@@ -129,7 +131,7 @@ class Poisdon(DefenseBase):
 
         self.threshold = np.percentile(anomaly_scores, detection_percentile)
 
-    def test_defense(self):
+    def test_defense(self) -> tuple[list[AnomalyResult], dict[str, Any]]:
         if self.experiment is None:
             raise RuntimeError("Defense has not been configured.")
 
@@ -155,9 +157,25 @@ class Poisdon(DefenseBase):
                 self.get_model_anomaly_score(model_features=model_features)  # type: ignore
             )
 
+        resolved_paths = [model_path.resolve() for model_path in test_models]
+
         anomaly_scores = np.array(anomaly_scores)
 
         # Classify as 'poison' if the score exceeds the threshold.
         predictions = anomaly_scores > self.threshold
 
-        print(predictions)
+        anomaly_results: list[AnomalyResult] = []
+
+        for i in range(len(resolved_paths)):
+            anomaly_results.append(
+                AnomalyResult(
+                    model_path=resolved_paths[i],
+                    anomaly_score=anomaly_scores[i],
+                    is_anomaly=predictions[i],
+                )
+            )
+
+        return (
+            anomaly_results,
+            {},
+        )  # Empty dict since currently no poisdon specific metadata

@@ -1,7 +1,7 @@
 dataset_name: cifar10
 experiment_id: "exp_1"
 
-run_id: 1
+run_id: "2"
 defense_name: poisdon
 
 seed: 42
@@ -20,6 +20,9 @@ val_model_collections:
 test_model_collections:
   - run_id: "1"
     attack_name: badnet
+    model_architecture_name: simple_cnn
+  - run_id: "1"
+    attack_name: clean_basic
     model_architecture_name: simple_cnn
 
 defense_config:

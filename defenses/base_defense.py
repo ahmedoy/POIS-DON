@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
-from schema.defense_experiment import DefenseExperiment, ModelCollection
+from schema.defense_experiment import (
+    AnomalyResult,
+    DefenseExperiment,
+    ModelCollection,
+)
 from utils.storage_layout import TrainedModelPath
 
 
@@ -54,5 +59,9 @@ class DefenseBase(ABC):
         pass
 
     @abstractmethod
-    def test_defense(self):
+    def test_defense(
+        self,
+    ) -> tuple[
+        list[AnomalyResult], dict[str, Any]
+    ]:  # returns list of results with optional additional metadata
         pass

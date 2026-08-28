@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NamedTuple
+
 import yaml
-from typing import NamedTuple
 from torch.utils.data import DataLoader
 
 

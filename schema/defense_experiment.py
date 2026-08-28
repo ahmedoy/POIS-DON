@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -68,3 +69,19 @@ class DefenseExperiment:
         ]
 
         return cls(**data)
+
+
+@dataclass
+class AnomalyResult:
+    model_path: Path
+    anomaly_score: float
+    is_anomaly: bool
+
+
+@dataclass
+class DefenseExperimentArtifact:
+    timestamp: str
+    repository_clean: bool
+    repo_hash: str
+    metadata_dict: dict[str, Any]
+    defense_experiment_config: dict[str, Any]

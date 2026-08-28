@@ -36,3 +36,22 @@ class TrainedModelPath:
             / model_architecture_name
             / model_hash_id
         )
+
+
+class DefenseResultPath:
+    @staticmethod
+    def get_result_dir(
+        image_dataset_name: str,
+        exp_name: str,
+        run_id: str,
+        defense_name: str,
+    ):
+
+        print(type(run_id))
+        return (
+            ImageDatasetPaths.get_dataset_dir(image_dataset_name)
+            / "defenses"
+            / exp_name
+            / defense_name
+            / run_id
+        )
