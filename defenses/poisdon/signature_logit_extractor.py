@@ -207,7 +207,7 @@ class SignatureLogitsExtractor:
             self.poisdon_modes = (poisdon_mode,)
 
         self.use_standardization: bool = self.poisdon_config.defense_config[
-            "poisdon_mode"
+            "use_standardization"
         ]
 
     def get_features(
