@@ -47,7 +47,6 @@ class DefenseResultPath:
         defense_name: str,
     ):
 
-        print(type(run_id))
         return (
             ImageDatasetPaths.get_dataset_dir(image_dataset_name)
             / "defenses"

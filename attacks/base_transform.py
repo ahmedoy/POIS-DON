@@ -56,7 +56,7 @@ class AttackTransform:
                     # ineligible label reaching here means the caller failed to
                     # filter — this should never silently become "clean".
                     raise ValueError(
-                        f"Label {label} is not a poisonable class, but "
+                        f"Lable {label} is not a poisonable class, but "
                         "TransformMode.POISON requires every sample to be poisoned."
                     )
                 poison = False  # DEFAULT mode: fine to back off per-sample
